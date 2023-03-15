@@ -21,7 +21,7 @@ class Updater:
 
     def find_replace(self, find, replace):
         for p, old_content in self.old_contents.items():
-            new_content = re.sub("[a-z\\/-a-z]*@v1[-a-z]*[0-9]*",replace, old_content)
+            new_content = re.sub("[a-z-\\/@0-9]*",replace, old_content)
             if new_content == old_content:
                 print("(no change in content)")
                 continue
