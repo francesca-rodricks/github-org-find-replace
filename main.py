@@ -2,6 +2,7 @@ import os
 
 import github
 import click
+import re
 
 
 class Updater:
@@ -14,14 +15,13 @@ class Updater:
 
     def get_old_contents(self):
         for p in self.paths:
-            # get the current content from master
-            f = self.repo.get_file_contents(p)
+            f = self.repo.get_contents(p)
             self.old_contents[p] = f.decoded_content.decode("utf-8")
             self.old_shas[p] = f.sha
 
     def find_replace(self, find, replace):
         for p, old_content in self.old_contents.items():
-            new_content = old_content.replace(find, replace)
+            new_content = re.sub("[a-z\\/-a-z]*@v1[-a-z]*[0-9]*",replace, old_content)
             if new_content == old_content:
                 print("(no change in content)")
                 continue
@@ -45,7 +45,7 @@ class Updater:
         )
 
         for p, new_content in self.new_contents.items():
-            old_file_sha = self.repo.get_file_contents(p, ref.ref).sha
+            old_file_sha = self.repo.get_contents(p, ref.ref).sha
             self.repo.update_file(
                 p,
                 message,
@@ -96,7 +96,6 @@ def cli(
 
     query = f"org:{organization} {extra_search_params} in:file '{find}'"
     results = gh.search_code(query)
-
     if not results.totalCount:
         click.echo(f"No results found for:\n{query}")
         return
@@ -108,7 +107,6 @@ def cli(
         if result.repository.archived:
             print(f"skipping archived repo {result.repository}")
             continue
-
         files_in_repo = repo_files.get(result.repository.full_name, [])
         files_in_repo.append(result.path)
         repo_files[result.repository.full_name] = files_in_repo
