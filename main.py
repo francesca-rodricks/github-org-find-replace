@@ -2,7 +2,6 @@ import os
 
 import github
 import click
-import re
 
 
 class Updater:
